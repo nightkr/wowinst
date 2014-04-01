@@ -1,11 +1,10 @@
-# !/usr/bin/python2
-
-from __future__ import unicode_literals
+# !/usr/bin/python3
 
 import os
 import shutil
 import zipfile
 import logging
+import argparse
 
 REPO = os.path.abspath(os.path.expanduser("~/.wowrepo"))
 WOW = os.path.abspath(os.path.expanduser("~/Games/World of Warcraft/Interface/addons-wowinst"))
@@ -47,6 +46,10 @@ def uninstall(name, version):
     shutil.rmtree(repo_path(name, version))
 
 
+def versions(name):
+    return os.listdir(repo_path(name))
+
+
 def enabled(name, version=None):
     return [x for x in os.listdir(WOW)
             if canonical_path(os.path.join(WOW, x)).startswith(repo_path(name, version))]
@@ -67,3 +70,25 @@ def disable(name, version):
     for x in enabled(name, version):
         logging.info("Disabling %s from %s v%s", x, name, version)
         os.remove(os.path.join(WOW, x))
+
+
+def cmd_install(args):
+    install(args.path, args.name, args.version)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    parser_install = subparsers.add_parser('install')
+    parser_install.add_argument('path', type=str)
+    parser_install.add_argument('name', type=str)
+    parser_install.add_argument('version', type=str)
+    parser_install.set_default(func=cmd_install)
+
+    parser_uninstall = subparsers.add_parser('uninstall')
+    parser_uninstall.add_argument('name', type=str)
+    parser_uninstall.add_argument('version', type=str)
+
+    args = parser.parse_args()
+    args.func(args)
